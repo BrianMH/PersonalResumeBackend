@@ -1,7 +1,9 @@
 package com.bhenriq.resume_backend.controller;
 
 import com.bhenriq.resume_backend.dto.StatusDTO;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class HealthController {
     @GetMapping
     public ResponseEntity<StatusDTO> getServerStatus() {
-        return ResponseEntity.status(HttpStatus.OK).body(new StatusDTO(true, "OK"));
+        return ResponseEntity.status(HttpStatus.OK).body(new StatusDTO(true, HttpServletResponse.SC_OK, "OK"));
     }
 }

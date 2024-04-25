@@ -17,6 +17,9 @@ public class StatusDTO {
     @JsonProperty("success")
     boolean success;
 
+    @JsonProperty("status")
+    int statusCode;
+
     @JsonProperty("message")
     String message;
 }
