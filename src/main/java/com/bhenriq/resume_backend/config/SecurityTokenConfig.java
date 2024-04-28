@@ -1,5 +1,6 @@
 package com.bhenriq.resume_backend.config;
 
+import com.bhenriq.resume_backend.service.AccountService;
 import com.bhenriq.resume_backend.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 public class SecurityTokenConfig {
     @Autowired
-    private UserService userSvc;
+    private AccountService accSvc;
 
     /**
      * Since all authentication happens via access tokens, we don't need the user details service
@@ -40,11 +41,17 @@ public class SecurityTokenConfig {
                 // handle an authorized attempts
                 .exceptionHandling(exception -> exception.authenticationEntryPoint((req, rsp, e) -> rsp.sendError(HttpServletResponse.SC_UNAUTHORIZED)))
                 // Add a filter to validate the tokens with every request
-                .addFilterBefore(new AccessTokenFilter(userSvc), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new AccessTokenFilter(accSvc), UsernamePasswordAuthenticationFilter.class)
                 // authorization requests config
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/applications/**").hasAuthority("ADMIN")
-                    .requestMatchers("/api").permitAll()
+                        // sub-admin roles have unrestricted access to specific controllers
+                        .requestMatchers("/api/users/**").hasAuthority("USER_ACCOUNT_ADMIN")
+
+                        // general admin incorporates all sub-admin roles
+                        .requestMatchers("/api/**").hasAuthority("GENERAL_ADMIN")
+
+                        // We let anybody access our health api located at the root of /api
+                        .requestMatchers("/api").permitAll()
                 )
                 .build();
     }

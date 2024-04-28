@@ -1,5 +1,6 @@
 package com.bhenriq.resume_backend.config;
 
+import com.bhenriq.resume_backend.service.AccountService;
 import com.bhenriq.resume_backend.service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -15,16 +16,29 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.UUID;
 
 /**
  * A security filter that can provide authentication and authorization given a request with an HTTP header carrying
- * a bearer access token
+ * a bearer access token. For this access token to work, the filter expects a request header with the following parameters:
+ *
+ * HEADER {
+ *      ...,
+ *      Authorization: Bearer {ACCESS_TOKEN}
+ *      Referer: https://{DOMAIN_ROOT}/auth/{PROVIDER}
+ *      ...,
+ * }
+ *
+ * The body is not manipulated and passed to the requested controller following authentication. If no referer is
+ * passed, then the default provider is presumed to be intrinsic to the system (so of form API_PROVIDER).
  */
 @AllArgsConstructor
 public class AccessTokenFilter extends OncePerRequestFilter {
     private static final int BEARER_OFFSET = 7;
+    public static final String API_KEY_TYPE = "PERM_API_KEY";
+    public static final String API_PROVIDER = UUID.randomUUID().toString();
 
-    private UserService userSvc;
+    private AccountService accSvc;
 
     @Override
     public void doFilterInternal(HttpServletRequest req, @NonNull HttpServletResponse res, @NonNull FilterChain nextFilter)
@@ -39,13 +53,28 @@ public class AccessTokenFilter extends OncePerRequestFilter {
 
         // And from here we will need our tokens verified
         token = token.strip().substring(BEARER_OFFSET).strip();
-        UserDetails givenUser = userSvc.getBaseUserFromAccessToken(token);
+        String referer = req.getHeader("Referer");
+
+        // make sure we are evaluating for the right user
+        UserDetails givenUser;
+        if(referer != null && !referer.isEmpty()) {
+            logger.debug("Request container referer header value - " + referer);
+            String[] authTokens = referer.split("/auth/");
+            String authProvider = authTokens[authTokens.length-1];
+
+            // and now we attempt retrieval
+            givenUser = accSvc.getBaseUserFromAccessTokenAndProvider(token, authProvider);
+        } else {
+            // otherwise try loading assuming given API key is database sourced
+            givenUser = accSvc.getBaseUserFromAccessTokenAndProvider(token, API_PROVIDER);
+        }
+
         if(givenUser == null) {
             logger.debug(String.format("Could not find given access key within database - %s:", token));
             nextFilter.doFilter(req, res);
             return;
         }
-        logger.debug(String.format("Found request with given access token - %s", token));
+        logger.debug(String.format("Found user with given access token - %s", givenUser.getUsername()));
 
         // if account is not valid, then we can pass through this filter
         if(!givenUser.isAccountNonExpired() || !givenUser.isAccountNonLocked() || !givenUser.isCredentialsNonExpired() || !givenUser.isEnabled()) {

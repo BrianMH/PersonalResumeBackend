@@ -9,10 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.Instant;
-import java.util.Collection;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Contains some general information about users. In this application, however, only authenticated users will be stored
@@ -26,31 +23,34 @@ import java.util.UUID;
 @Table
 public class User implements UserDetails {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private String id;
 
     // And then record some elements that would be passed from the front-end's JWT creation
-    @Column(name = "email")
+    @Column(name = "email",
+            unique = true)
     private String email;
     @Column(name = "username")
     private String username;
-    @Column(name = "access_token")
-    private String accessToken;
-    @Column(name = "expires")
-    private Instant tokenExpiry;
+    @Column(name = "image")
+    private String image;
 
     // and also include the relevant role of the given user
     @ManyToMany(fetch = FetchType.EAGER)
     private Set<Role> roles;
 
+    // and their associated accounts
+    @OneToMany(mappedBy = "owningUser",
+                orphanRemoval = true)
+    private Set<Account> accounts;
+
     // Normal ctor (w.o role pre-specification)
-    public User(String email, String username, String accessToken, Instant tokenExpiry) {
+    public User(String email, String username) {
+        this.id = UUID.randomUUID().toString();
         this.email = email;
         this.username = username;
-        this.accessToken = accessToken;
-        this.tokenExpiry = tokenExpiry;
 
         this.roles = new TreeSet<>();
+        this.accounts = new HashSet<>();
     }
 
     @Override
@@ -64,6 +64,14 @@ public class User implements UserDetails {
 
     public boolean removeAuthority(Role authority) {
         return this.roles.remove(authority);
+    }
+
+    public boolean addAccount(Account acc) {
+        return this.accounts.add(acc);
+    }
+
+    public boolean removeAccount(Account acc) {
+        return this.accounts.remove(acc);
     }
 
     @Override
@@ -83,11 +91,17 @@ public class User implements UserDetails {
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return tokenExpiry == null || Instant.now().compareTo(tokenExpiry) <= 0;
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("[User = (id = %s) - (email = %s) - (username = %s) - (roles = %s)]",
+                id, email, username, roles);
     }
 }
