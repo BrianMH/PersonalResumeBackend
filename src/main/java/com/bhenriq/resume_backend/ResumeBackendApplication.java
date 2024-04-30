@@ -2,9 +2,11 @@ package com.bhenriq.resume_backend;
 
 import com.bhenriq.resume_backend.config.AccessTokenFilter;
 import com.bhenriq.resume_backend.model.Account;
+import com.bhenriq.resume_backend.model.EmailWhitelist;
 import com.bhenriq.resume_backend.model.Role;
 import com.bhenriq.resume_backend.model.User;
 import com.bhenriq.resume_backend.repository.AccountRepository;
+import com.bhenriq.resume_backend.repository.EmailWhitelistRepository;
 import com.bhenriq.resume_backend.repository.RoleRepository;
 import com.bhenriq.resume_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
@@ -25,9 +28,13 @@ public class ResumeBackendApplication implements CommandLineRunner {
     private RoleRepository roleRepo;
     @Autowired
     private AccountRepository accountRepo;
+    @Autowired
+    private EmailWhitelistRepository emailListRepo;
 
     @Value("${BACKEND_API_KEY}")
     private String DEFAULT_API_KEY;
+    @Value("${ADMIN_USER_EMAIL}")
+    private String DEFAULT_ADMIN_EMAIL;
 
     /**
      * Sets up our pre-defined roles (without the ROLE_ prefix as they are reported as authorities)
@@ -49,7 +56,7 @@ public class ResumeBackendApplication implements CommandLineRunner {
      */
     private void setupAPIUser() {
         // first create the user for the API User
-        User apiUser = new User("a@a.com", "API_USER");
+        User apiUser = new User(null, "API_USER");
         apiUser.addAuthority(roleRepo.findById("USER_ACCOUNT_ADMIN").orElse(null));
 
         // and then add an API access account
@@ -57,7 +64,7 @@ public class ResumeBackendApplication implements CommandLineRunner {
                 AccessTokenFilter.API_KEY_TYPE,
                 AccessTokenFilter.API_PROVIDER,
                 null,
-                "123456789",
+                DEFAULT_API_KEY,
                 null,
                 apiUser);
 
@@ -66,10 +73,21 @@ public class ResumeBackendApplication implements CommandLineRunner {
         accountRepo.save(apiAccount);
     }
 
+    private void setupBaseAdminUserPrivileges() {
+        // since user creation is managed by the front-end, we instead indirectly associate roles through the email whitelist
+        // used during creation
+        EmailWhitelist adminWhitelistObj = new EmailWhitelist(DEFAULT_ADMIN_EMAIL, Set.of(
+                roleRepo.findById("GENERAL_ADMIN").orElseThrow(() -> {return new RuntimeException("Encountered missing role value");})
+        ));
+
+        emailListRepo.save(adminWhitelistObj);
+    }
+
     @Override
     public void run(String... args) {
         setupRoles();
         setupAPIUser();
+        setupBaseAdminUserPrivileges();
     }
 
 

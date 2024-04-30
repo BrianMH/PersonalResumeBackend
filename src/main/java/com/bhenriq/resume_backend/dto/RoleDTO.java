@@ -12,5 +12,5 @@ import lombok.Setter;
 @AllArgsConstructor
 public class RoleDTO {
     @JsonProperty("authority")
-    String authority;
+    private String authority;
 }

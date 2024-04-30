@@ -8,7 +8,6 @@ import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.time.Instant;
 import java.util.*;
 
 /**
@@ -23,6 +22,7 @@ import java.util.*;
 @Table
 public class User implements UserDetails {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     // And then record some elements that would be passed from the front-end's JWT creation
@@ -45,7 +45,6 @@ public class User implements UserDetails {
 
     // Normal ctor (w.o role pre-specification)
     public User(String email, String username) {
-        this.id = UUID.randomUUID().toString();
         this.email = email;
         this.username = username;
 
@@ -59,6 +58,9 @@ public class User implements UserDetails {
     }
 
     public boolean addAuthority(Role authority) {
+        if(authority == null)
+            return false;
+
         return this.roles.add(authority);
     }
 

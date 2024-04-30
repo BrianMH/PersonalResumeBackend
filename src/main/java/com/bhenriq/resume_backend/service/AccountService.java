@@ -4,10 +4,11 @@ import com.bhenriq.resume_backend.dto.AccountDTO;
 import com.bhenriq.resume_backend.model.Account;
 import com.bhenriq.resume_backend.model.User;
 import com.bhenriq.resume_backend.repository.AccountRepository;
+import com.bhenriq.resume_backend.repository.UserRepository;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -18,6 +19,19 @@ public class AccountService {
     @Autowired
     private AccountRepository accRepo;
 
+    @Autowired
+    private UserRepository userRepo;
+
+    @Autowired
+    private ModelMapper converter;
+
+    /**
+     * A helper function used to return the base user given a particular account via it's single-sided connection.
+     *
+     * @param accessToken
+     * @param provider
+     * @return
+     */
     public User getBaseUserFromAccessTokenAndProvider(String accessToken, String provider) {
         // first find the relevant account
         Optional<Account> relAccount = accRepo.findAccountByAccessTokenAndProvider(accessToken, provider);
@@ -33,7 +47,7 @@ public class AccountService {
      * @param toChange
      * @return
      */
-    public boolean updateUserToken(AccountDTO toChange) {
+    public boolean updateAccountToken(AccountDTO toChange) {
         // first try to find the relevant account given inputs
         Optional<Account> relAccount = accRepo.findAccountByProviderAndProviderAccountId(toChange.getProvider(), toChange.getProviderAccountId());
         if(relAccount.isEmpty())
@@ -46,5 +60,18 @@ public class AccountService {
         // and then push it back to the database for update
         accRepo.save(changeObj);
         return true;
+    }
+
+    public AccountDTO associateAccountToUser(AccountDTO toLink, String userId) {
+        // first make sure the user to link to actually exists
+        if(!userRepo.existsById(userId))
+            return null;
+
+        // and then attempt linking via account creation
+        Account toAdd = converter.map(toLink, Account.class);
+        toAdd.setOwningUser(userRepo.getReferenceById(userId));
+        Account savedAccount = accRepo.save(toAdd);
+
+        return converter.map(savedAccount, AccountDTO.class);
     }
 }

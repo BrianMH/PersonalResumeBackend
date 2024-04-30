@@ -14,10 +14,15 @@ import java.util.Objects;
 @Getter
 @Setter
 @Entity
-@Table
+@Table(uniqueConstraints = {
+        @UniqueConstraint(columnNames = {
+                "provider", "providerAccountId"
+        })
+})
 public class Account {
     @Id
-    String userId;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    String id;
 
     @Column(name = "type",
             nullable = false)
@@ -50,11 +55,11 @@ public class Account {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Account account = (Account) o;
-        return Objects.equals(userId, account.userId) && Objects.equals(type, account.type) && Objects.equals(provider, account.provider) && Objects.equals(providerAccountId, account.providerAccountId) && Objects.equals(accessToken, account.accessToken) && Objects.equals(tokenExpiry, account.tokenExpiry);
+        return Objects.equals(id, account.id) && Objects.equals(type, account.type) && Objects.equals(provider, account.provider) && Objects.equals(providerAccountId, account.providerAccountId) && Objects.equals(accessToken, account.accessToken) && Objects.equals(tokenExpiry, account.tokenExpiry);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userId, type, provider, providerAccountId, accessToken, tokenExpiry);
+        return Objects.hash(id, type, provider, providerAccountId, accessToken, tokenExpiry);
     }
 }
