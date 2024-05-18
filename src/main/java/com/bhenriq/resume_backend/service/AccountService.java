@@ -56,6 +56,7 @@ public class AccountService {
         // and then change the elements we want from the account
         Account changeObj = relAccount.get();
         changeObj.setAccessToken(toChange.getAccessToken());
+        changeObj.setTokenExpiry(toChange.getTokenExpiry());
 
         // and then push it back to the database for update
         accRepo.save(changeObj);

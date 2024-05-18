@@ -114,8 +114,11 @@ public class UserService {
         }).toList();
 
         // make sure there's only one matching account before continuing
-        if(relevantAccounts.size() != 1)
+        if(relevantAccounts.size() > 1)
             throw new RuntimeException("Encountered duplicate access tokens and expiry elements. Ensure database is properly set up.");
+        else if (relevantAccounts.isEmpty()) {
+            throw new NotFoundException(String.format("No given user exists with passed token %s", updatePatch.getOldAccessToken()));
+        }
         Account relevantAccount = relevantAccounts.getFirst();
         relevantAccount.setTokenExpiry(updatePatch.getNewExpiresAt());
         relevantAccount.setAccessToken(updatePatch.getNewAccessToken());

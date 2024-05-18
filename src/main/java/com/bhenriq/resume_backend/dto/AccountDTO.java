@@ -18,7 +18,7 @@ public class AccountDTO {
     private String type;
     @JsonProperty("provider")
     private String provider;
-    @JsonProperty("providerAccountId")
+    @JsonProperty("provider_account_id")
     private String providerAccountId;
 
     @JsonProperty("access_token")

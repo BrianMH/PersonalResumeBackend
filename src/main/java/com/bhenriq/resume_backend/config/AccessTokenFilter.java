@@ -35,8 +35,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class AccessTokenFilter extends OncePerRequestFilter {
     private static final int BEARER_OFFSET = 7;
-    public static final String API_KEY_TYPE = "PERM_API_KEY";
-    public static final String API_PROVIDER = UUID.randomUUID().toString();
+    public static final String API_KEY_TYPE = "root_key";
+    public static final String API_PROVIDER = "system";
 
     private AccountService accSvc;
 
@@ -59,18 +59,16 @@ public class AccessTokenFilter extends OncePerRequestFilter {
         UserDetails givenUser;
         if(referer != null && !referer.isEmpty()) {
             logger.debug("Request container referer header value - " + referer);
-            String[] authTokens = referer.split("/auth/");
-            String authProvider = authTokens[authTokens.length-1];
 
             // and now we attempt retrieval
-            givenUser = accSvc.getBaseUserFromAccessTokenAndProvider(token, authProvider);
+            givenUser = accSvc.getBaseUserFromAccessTokenAndProvider(token, referer);
         } else {
             // otherwise try loading assuming given API key is database sourced
             givenUser = accSvc.getBaseUserFromAccessTokenAndProvider(token, API_PROVIDER);
         }
 
         if(givenUser == null) {
-            logger.debug(String.format("Could not find given access key within database - %s:", token));
+            logger.debug(String.format("Could not find given access key within database - %s", token));
             nextFilter.doFilter(req, res);
             return;
         }

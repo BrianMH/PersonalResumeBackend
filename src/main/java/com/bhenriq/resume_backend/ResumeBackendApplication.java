@@ -1,24 +1,17 @@
 package com.bhenriq.resume_backend;
 
 import com.bhenriq.resume_backend.config.AccessTokenFilter;
-import com.bhenriq.resume_backend.model.Account;
-import com.bhenriq.resume_backend.model.EmailWhitelist;
-import com.bhenriq.resume_backend.model.Role;
-import com.bhenriq.resume_backend.model.User;
-import com.bhenriq.resume_backend.repository.AccountRepository;
-import com.bhenriq.resume_backend.repository.EmailWhitelistRepository;
-import com.bhenriq.resume_backend.repository.RoleRepository;
-import com.bhenriq.resume_backend.repository.UserRepository;
+import com.bhenriq.resume_backend.dummy.InitialPost;
+import com.bhenriq.resume_backend.model.*;
+import com.bhenriq.resume_backend.repository.*;
+import com.bhenriq.resume_backend.service.S3BucketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.util.*;
 
 @SpringBootApplication
 public class ResumeBackendApplication implements CommandLineRunner {
@@ -30,6 +23,10 @@ public class ResumeBackendApplication implements CommandLineRunner {
     private AccountRepository accountRepo;
     @Autowired
     private EmailWhitelistRepository emailListRepo;
+    @Autowired
+    private BlogPostRepository blogPostRepo;
+    @Autowired
+    BlogPostTagRepository blogPostTagRepo;
 
     @Value("${BACKEND_API_KEY}")
     private String DEFAULT_API_KEY;
@@ -83,11 +80,25 @@ public class ResumeBackendApplication implements CommandLineRunner {
         emailListRepo.save(adminWhitelistObj);
     }
 
+    private void setupInitialBlogPost() {
+        // Set up our initial tags first as they will constantly be reused and save them
+        BlogPostTag backendTag = new BlogPostTag(null, "Back-end", null);
+        BlogPostTag frontendTag = new BlogPostTag(null, "Front-end", null);
+        BlogPostTag updateTag = new BlogPostTag(null, "Updates", null);
+        List<BlogPostTag> relTags = blogPostTagRepo.saveAll(List.of(backendTag, frontendTag, updateTag));
+        Set<BlogPostTag> savedTags = new HashSet<>(relTags);
+
+        // This is essentially the first post. We can manually set it up here.
+        BlogPost firstPost = new BlogPost(null, savedTags, InitialPost.HEADER_IM, InitialPost.POST_TITLE, InitialPost.POST_CONTENT, InitialPost.POST_IMAGES, null, null);
+        blogPostRepo.save(firstPost);
+    }
+
     @Override
     public void run(String... args) {
         setupRoles();
         setupAPIUser();
         setupBaseAdminUserPrivileges();
+        setupInitialBlogPost();
     }
 
 
