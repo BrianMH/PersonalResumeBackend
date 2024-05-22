@@ -39,6 +39,7 @@ public class UserAccountController {
     @PostMapping("/updateToken")
     public ResponseEntity<StatusDTO> changeAccountAccessToken(@RequestBody AccountDTO accountToAdjust) {
         boolean valueReplaced = accSvc.updateAccountToken(accountToAdjust);
+        System.out.println(accountToAdjust);
         if(!valueReplaced) {
             throw new NotFoundException("Error updating specified account's access code.");
         } else {

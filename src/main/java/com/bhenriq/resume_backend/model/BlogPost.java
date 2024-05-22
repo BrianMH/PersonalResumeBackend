@@ -38,7 +38,7 @@ public class BlogPost {
     @Column(name = "content",
             length = 16777215)  // force MEDIUMTEXT on SQL
     private String blogContent;
-    @ElementCollection
+    @ElementCollection( fetch = FetchType.EAGER )
     @CollectionTable(
             name = "ImageRef",
             joinColumns = @JoinColumn(name = "blogId")

@@ -1,10 +1,7 @@
 package com.bhenriq.resume_backend.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
@@ -18,7 +15,7 @@ public class AccountDTO {
     private String type;
     @JsonProperty("provider")
     private String provider;
-    @JsonProperty("provider_account_id")
+    @JsonProperty("providerAccountId")
     private String providerAccountId;
 
     @JsonProperty("access_token")

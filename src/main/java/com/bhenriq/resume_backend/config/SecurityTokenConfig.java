@@ -69,6 +69,7 @@ public class SecurityTokenConfig {
         return tokenSecurityBaseConfig(http, "/api/blog/**")
                 .authorizeHttpRequests(auth -> auth
                         // first allow users to access specific paths which anyone can access
+                        .requestMatchers("/api/blog/posts").permitAll()
                         .requestMatchers("/api/blog/posts/{id}").permitAll()
                         .requestMatchers("/api/blog/posts/{id}/preview").permitAll()
                         .requestMatchers("/api/blog/tags/all").permitAll()

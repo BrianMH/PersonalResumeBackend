@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -30,4 +31,9 @@ public interface BlogPostRepository extends JpaRepository<BlogPost, Long> {
             "FROM BlogPost b ORDER BY b.createdOn DESC "
     )
     Page<IdWrapper> findAllIdsPageableOrderedByCreation(Pageable pageable);
+
+    @Query(
+            "FROM BlogPost b"
+    )
+    List<IdWrapper> findAllIds();
 }
