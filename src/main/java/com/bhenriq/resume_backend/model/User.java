@@ -19,7 +19,7 @@ import java.util.*;
 @Getter
 @Setter
 @Entity
-@Table
+@Table(name = "users")
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

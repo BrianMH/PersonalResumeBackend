@@ -6,7 +6,9 @@ import com.bhenriq.resume_backend.service.BlogService;
 import com.bhenriq.resume_backend.service.S3BucketService;
 import com.bhenriq.resume_backend.util.Pair;
 import jakarta.servlet.http.HttpServletResponse;
+import jdk.jshell.Snippet;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -100,6 +102,7 @@ public class BlogController {
         Map<String, String> improperStrings = postContent.getImageUrls()
                 .entrySet()
                 .stream()
+                .filter(keyValPair -> !keyValPair.getValue().startsWith(CDN_PATH + "/dynamic/" + id + "/"))  // ignore elements already within the CDN as they are valid by default
                 .filter(keyValPair -> !bucketService.checkValidImageUrl(keyValPair.getValue()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (x, y) -> {throw new IllegalStateException("Duplicate keys found.");}, HashMap::new));
@@ -136,6 +139,18 @@ public class BlogController {
             throw new NotFoundException(String.format("Post with id %d does not exist in database.", id));
         else
             return ResponseEntity.status(HttpServletResponse.SC_OK).body(foundPost);
+    }
+
+    @DeleteMapping("/posts/{id}")
+    public ResponseEntity<StatusDTO> deleteBlogPost(@PathVariable Long id) {
+        boolean deletedPost = blogService.removePostById(id);
+
+        if(!deletedPost)
+            return ResponseEntity.status(HttpServletResponse.SC_INTERNAL_SERVER_ERROR).body(new StatusDTO(false,
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Deletion failed"));
+        else
+            return ResponseEntity.status(HttpServletResponse.SC_OK).body(new StatusDTO(true,
+                    HttpServletResponse.SC_OK, "Deleted."));
     }
 
     @GetMapping("/posts/{id}/preview")
@@ -176,6 +191,21 @@ public class BlogController {
     @GetMapping("/tags/all")
     public ResponseEntity<List<BlogPostTagDTO>> getAllTags() {
         return ResponseEntity.status(HttpServletResponse.SC_OK).body(blogService.getAllPostTags());
+    }
+
+    /**
+     * Allows for the deletion of a tag, but only if it does not have any blog posts currently referencing it.
+     * @return a status DTO representing the success of the operation
+     */
+    @DeleteMapping("/tags/{id}")
+    public ResponseEntity<StatusDTO> removeSpecifiedTag(@PathVariable Long id) {
+        boolean deletionResponse = blogService.removePostTagById(id);
+        if(deletionResponse)
+            return ResponseEntity.status(HttpServletResponse.SC_OK).body(new StatusDTO(true,
+                    HttpServletResponse.SC_OK, "Deleted."));
+        else
+            return ResponseEntity.status(HttpServletResponse.SC_INTERNAL_SERVER_ERROR).body(new StatusDTO(false,
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Deletion failed."));
     }
 
     /**

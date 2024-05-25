@@ -15,9 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
@@ -129,6 +131,33 @@ public class BlogService {
     }
 
     /**
+     * Deletes a post given its ID. Since there is no removal cascade set, in order for this to work we must individually
+     * remove tag connections in order to delete the post.
+     * @param id the id of the post to remove
+     * @return true if the removal succeeded. false otherwise
+     */
+    @Transactional
+    public boolean removePostById(Long id) {
+        try {
+            // first get our tags and disassociate them
+            Optional<BlogPost> blogPostCont = blogPostRepo.findById(id);
+            BlogPost toDelete = blogPostCont.orElseThrow(() -> {return new EmptyResultDataAccessException(1);});
+            toDelete.setPostTags(null);
+            blogPostRepo.saveAndFlush(toDelete);
+
+            // and then delete the object itself
+            blogPostRepo.delete(toDelete);
+            return true;
+        } catch(EmptyResultDataAccessException e) {
+            log.warn(String.format("Attempted deletion of non-present id %d", id));
+        } catch(Exception e) {
+            log.warn(String.format("Given post with id %d cannot be deleted. Unknown error occurred.", id));
+        }
+
+        return false;
+    }
+
+    /**
      * In order to speed up this operation a bit, we delegate retrieval to a subset of the post categories.
      * @param id the id of the post to get
      * @return the post preview in DTO format, or null, if it doesn't exist
@@ -143,6 +172,24 @@ public class BlogService {
      */
     public List<BlogPostTagDTO> getAllPostTags() {
         return blogTagRepo.findAll().stream().map(blogTag -> converter.map(blogTag, BlogPostTagDTO.class)).collect(Collectors.toList());
+    }
+
+    /**
+     * Attempts to remove a blog post tag by its given ID. Returns false if the given tag is currently in use by a post.
+     * @param id the id of the tag to remove
+     * @return true if the removal is a success, false otherwise
+     */
+    public boolean removePostTagById(Long id) {
+        try {
+            blogTagRepo.deleteById(id);
+            return true;
+        } catch(EmptyResultDataAccessException e) {
+            log.warn(String.format("Attempted deletion of non-present id %d", id));
+        } catch(Exception e) {
+            log.warn(String.format("Given tag with id %d cannot be deleted. Have you deleted all associated posts?", id));
+        }
+
+        return false;
     }
 
     /**

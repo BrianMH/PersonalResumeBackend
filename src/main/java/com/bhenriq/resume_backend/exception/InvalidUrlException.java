@@ -27,7 +27,7 @@ public class InvalidUrlException extends RestRuntimeException {
     private static String constructMessage(String messagePrefix, Map<String, String> invalidUrls) {
         StringBuilder respMessage = new StringBuilder(messagePrefix);
         for(Map.Entry<String, String> entry : invalidUrls.entrySet()) {
-            respMessage.append(String.format("\n\t%s : %s", entry.getKey(), entry.getValue()));
+            respMessage.append(String.format(" ( %s : %s ) ", entry.getKey(), entry.getValue()));
         }
 
         return respMessage.toString();
