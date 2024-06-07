@@ -89,7 +89,7 @@ public class ResumeBackendApplication implements CommandLineRunner {
         Set<BlogPostTag> savedTags = new HashSet<>(relTags);
 
         // This is essentially the first post. We can manually set it up here.
-        BlogPost firstPost = new BlogPost(null, savedTags, InitialPost.HEADER_IM, InitialPost.POST_TITLE, InitialPost.POST_CONTENT, InitialPost.POST_IMAGES, null, null);
+        BlogPost firstPost = new BlogPost(null, savedTags, InitialPost.HEADER_IM, InitialPost.POST_TITLE, InitialPost.POST_CONTENT, InitialPost.POST_IMAGES, false, null, null);
         blogPostRepo.save(firstPost);
     }
 

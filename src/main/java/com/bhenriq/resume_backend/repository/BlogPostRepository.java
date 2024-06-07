@@ -16,24 +16,47 @@ import java.util.Optional;
 @Repository
 public interface BlogPostRepository extends JpaRepository<BlogPost, Long> {
     Optional<BlogPreview> findBlogPostById(Long id);
+    Optional<BlogPost> findBlogPostByIdAndPublished(Long id, Boolean published);
+
+    @Query(
+            "SELECT COUNT(*) FROM BlogPost b JOIN b.postTags t WHERE LOWER(t.tagName) = LOWER(:query) AND b.published = true "
+    )
+    Long countBlogPostsByTagName(@Param("query")String query);
+
+    Long countBlogPostsByPublished(Boolean published);
 
     @Query(
             "SELECT COUNT(*) FROM BlogPost b JOIN b.postTags t WHERE LOWER(t.tagName) = LOWER(:query) "
     )
-    Long countBlogPostsByTagName(@Param("query")String query);
+    Long countBlogPostsByTagNameWithUnpublished(@Param("query")String query);
 
     @Query(
-            "FROM BlogPost b JOIN b.postTags t WHERE LOWER(t.tagName) = LOWER(:query) ORDER BY b.createdOn DESC "
+            "FROM BlogPost b JOIN b.postTags t WHERE LOWER(t.tagName) = LOWER(:query) AND b.published = true ORDER BY b.createdOn DESC "
     )
     Page<IdWrapper> findAllIdsByTagNamePageableOrderedByCreation(@Param("query")String query, Pageable pageable);
 
     @Query(
-            "FROM BlogPost b ORDER BY b.createdOn DESC "
+            "FROM BlogPost b JOIN b.postTags t WHERE LOWER(t.tagName) = LOWER(:query) ORDER BY b.createdOn DESC "
+    )
+    Page<IdWrapper> findAllIdsByTagNamePageableOrderedByCreationWithUnpublished(@Param("query")String query, Pageable pageable);
+
+    @Query(
+            "FROM BlogPost b WHERE b.published = true ORDER BY b.createdOn DESC "
     )
     Page<IdWrapper> findAllIdsPageableOrderedByCreation(Pageable pageable);
 
     @Query(
-            "FROM BlogPost b"
+            "FROM BlogPost b ORDER BY b.createdOn DESC "
+    )
+    Page<IdWrapper> findAllIdsPageableOrderedByCreationWithUnpublished(Pageable pageable);
+
+    @Query(
+            "FROM BlogPost b WHERE b.published = true"
     )
     List<IdWrapper> findAllIds();
+
+    @Query(
+        "FROM BlogPost b"
+    )
+    List<IdWrapper> findAllIdsWithUnpublished();
 }

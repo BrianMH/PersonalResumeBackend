@@ -131,12 +131,32 @@ public class BlogController {
         return ResponseEntity.status(HttpServletResponse.SC_ACCEPTED).body(toReturn.left);
     }
 
+    @PostMapping("/posts/{id}/published")
+    public ResponseEntity<StatusDTO> adjustPostPublished(@PathVariable Long id, @RequestParam boolean publish) {
+        boolean postChanged = blogService.setPostPublished(id, publish);
+
+        if(postChanged)
+            return ResponseEntity.status(HttpServletResponse.SC_OK).body(new StatusDTO(true, HttpServletResponse.SC_OK, "Changed"));
+        else
+            throw new UpdateException("There was no change to the indicated post.");
+    }
+
     @GetMapping("/posts/{id}")
     public ResponseEntity<BlogPostDTO> getBlogPost(@PathVariable Long id) {
-        BlogPostDTO foundPost = blogService.getBlogPostById(id);
+        BlogPostDTO foundPost = blogService.getBlogPostById(id, false);
 
         if(foundPost == null)
             throw new NotFoundException(String.format("Post with id %d does not exist in database.", id));
+        else
+            return ResponseEntity.status(HttpServletResponse.SC_OK).body(foundPost);
+    }
+
+    @GetMapping("/all/posts/{id}")
+    public ResponseEntity<BlogPostDTO> getBlogPostOrDraft(@PathVariable Long id) {
+        BlogPostDTO foundPost = blogService.getBlogPostById(id, true);
+
+        if(foundPost == null)
+            throw new NotFoundException(String.format("Post or draft with id %d does not exist in database.", id));
         else
             return ResponseEntity.status(HttpServletResponse.SC_OK).body(foundPost);
     }
@@ -208,6 +228,31 @@ public class BlogController {
                     HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Deletion failed."));
     }
 
+    @GetMapping("/posts/all/paged/{pageSize}")
+    public ResponseEntity<Long> getNumberPagesWithQueryWithDrafts(@PathVariable int pageSize,
+                                                                  @RequestParam(required = false) String tagName) {
+        if(pageSize < 0)
+            throw new GetArgumentException(String.format("%d is not a valid page size.", pageSize));
+
+        if(tagName != null && !tagName.isEmpty())
+            return ResponseEntity.status(HttpServletResponse.SC_OK).body(blogService.getNumPages(pageSize, tagName, true));
+        else
+            return ResponseEntity.status(HttpServletResponse.SC_OK).body(blogService.getNumPages(pageSize, true));
+    }
+
+    @GetMapping("/posts/all/paged/{pageSize}/{page}")
+    public ResponseEntity<List<IdWrapperDTO>> getPagedPostIdsWithQueryWithDrafts(@PathVariable int pageSize,
+                                                                   @PathVariable int page,
+                                                                   @RequestParam(required = false) String tagName) {
+        if(pageSize < 0)
+            throw new GetArgumentException(String.format("%d is not a valid page size.", pageSize));
+
+        if(tagName != null && !tagName.isEmpty())
+            return ResponseEntity.status(HttpServletResponse.SC_OK).body(blogService.getOffsetPagedBlogIds(page, pageSize, tagName, true));
+        else
+            return ResponseEntity.status(HttpServletResponse.SC_OK).body(blogService.getOffsetPagedBlogIds(page, pageSize, true));
+    }
+
     /**
      * Returns the number of pages associated with a given post tag based on the user's designated page size.
      * @param pageSize the number of posts the front-end will render
@@ -221,9 +266,9 @@ public class BlogController {
             throw new GetArgumentException(String.format("%d is not a valid page size.", pageSize));
 
         if(tagName != null && !tagName.isEmpty())
-            return ResponseEntity.status(HttpServletResponse.SC_OK).body(blogService.getNumPages(pageSize, tagName));
+            return ResponseEntity.status(HttpServletResponse.SC_OK).body(blogService.getNumPages(pageSize, tagName, false));
         else
-            return ResponseEntity.status(HttpServletResponse.SC_OK).body(blogService.getNumPages(pageSize));
+            return ResponseEntity.status(HttpServletResponse.SC_OK).body(blogService.getNumPages(pageSize, false));
     }
 
     @GetMapping("/posts/paged/{pageSize}/{page}")
@@ -234,8 +279,8 @@ public class BlogController {
             throw new GetArgumentException(String.format("%d is not a valid page size.", pageSize));
 
         if(tagName != null && !tagName.isEmpty())
-            return ResponseEntity.status(HttpServletResponse.SC_OK).body(blogService.getOffsetPagedBlogIds(page, pageSize, tagName));
+            return ResponseEntity.status(HttpServletResponse.SC_OK).body(blogService.getOffsetPagedBlogIds(page, pageSize, tagName, false));
         else
-            return ResponseEntity.status(HttpServletResponse.SC_OK).body(blogService.getOffsetPagedBlogIds(page, pageSize));
+            return ResponseEntity.status(HttpServletResponse.SC_OK).body(blogService.getOffsetPagedBlogIds(page, pageSize, false));
     }
 }

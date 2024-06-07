@@ -34,6 +34,8 @@ public class BlogPostDTO {
     private Instant createdOn;
     @JsonProperty("updated")
     private Instant updatedOn;
+    @JsonProperty("published")
+    private Boolean published;
 
     @JsonProperty("postTags")
     private Set<BlogPostTagDTO> postTags;

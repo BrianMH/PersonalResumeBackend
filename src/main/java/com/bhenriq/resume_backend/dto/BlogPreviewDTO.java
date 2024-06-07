@@ -28,6 +28,8 @@ public class BlogPreviewDTO {
 
     @JsonProperty("created")
     private Instant createdOn;
+    @JsonProperty("published")
+    private Boolean published;
 
     @JsonProperty("postTags")
     private Set<BlogPostTagDTO> postTags;

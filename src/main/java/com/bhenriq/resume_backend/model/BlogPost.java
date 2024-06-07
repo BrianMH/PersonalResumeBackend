@@ -44,6 +44,8 @@ public class BlogPost {
             joinColumns = @JoinColumn(name = "blogId")
     )
     private Set<String> cdnImages;
+    @Column(name = "isPublished", columnDefinition = "boolean default false")
+    private Boolean published;
 
     // post timestamps (these get automatically updated)
     private Instant createdOn;
@@ -62,7 +64,7 @@ public class BlogPost {
 
     @Override
     public String toString() {
-        return String.format("{BlogPost (id=%d) == [header = %s] + [title = %s] + [content = %s] + [tags = %s] [created = %s] + [updated = %s] }",
-                id, blogHeader, blogTitle, blogContent, postTags, createdOn, updatedOn);
+        return String.format("{BlogPost (id=%d) == [header = %s] + [title = %s] + [content = %s] + [published = %b] + [tags = %s] [created = %s] + [updated = %s] }",
+                id, blogHeader, blogTitle, blogContent, published, postTags, createdOn, updatedOn);
     }
 }

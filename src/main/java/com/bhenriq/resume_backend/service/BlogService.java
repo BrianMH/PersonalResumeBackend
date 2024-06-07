@@ -101,6 +101,7 @@ public class BlogService {
         oldPost.setBlogTitle(toUpdate.getBlogTitle());
         oldPost.setBlogContent(toUpdate.getBlogContent());
         oldPost.setBlogHeader(toUpdate.getBlogHeader());
+        oldPost.setPublished(toUpdate.getPublished());
 
         // Now, for the different part, we can't just overwrite our set of CDN images. We must first identify which images
         // will require deletion and return those URLs for bucket management
@@ -126,8 +127,11 @@ public class BlogService {
      * @param id the id of the post to get
      * @return the post content in DTO format, or null, if it doesn't exist
      */
-    public BlogPostDTO getBlogPostById(Long id) {
-        return blogPostRepo.findById(id).map(blogPost -> converter.map(blogPost, BlogPostDTO.class)).orElse(null);
+    public BlogPostDTO getBlogPostById(Long id, boolean includeUnpublished) {
+        if(includeUnpublished)
+            return blogPostRepo.findById(id).map(blogPost -> converter.map(blogPost, BlogPostDTO.class)).orElse(null);
+        else
+            return blogPostRepo.findBlogPostByIdAndPublished(id, true).map(blogPost -> converter.map(blogPost, BlogPostDTO.class)).orElse(null);
     }
 
     /**
@@ -192,6 +196,23 @@ public class BlogService {
         return false;
     }
 
+    public boolean setPostPublished(Long id, boolean publish) {
+        try {
+            Optional<BlogPost> blogPostCont = blogPostRepo.findById(id);
+            BlogPost toAdjust = blogPostCont.orElseThrow(() -> {return new EmptyResultDataAccessException(1);});
+
+            toAdjust.setPublished(publish);
+            blogPostRepo.save(toAdjust);
+            return true;
+        } catch(EmptyResultDataAccessException e) {
+            log.warn(String.format("Attempted to adjust publish value of invalid post %d", id));
+        } catch(Exception e) {
+            log.warn(String.format("Given post with id %d cannot be adjusted. Unknown error occurred.", id));
+        }
+
+        return false;
+    }
+
     /**
      * Return the number of pages corresponding to all posts with the given unique tag name.
      *
@@ -199,8 +220,14 @@ public class BlogService {
      * @param tagName the tag name to search blog posts for
      * @return the number of pages associated with the potentially returned paged posts
      */
-    public Long getNumPages(int pageSize, String tagName) {
-        return (long)Math.ceil(blogPostRepo.countBlogPostsByTagName(tagName)/(double)pageSize);
+    public Long getNumPages(int pageSize, String tagName, boolean includeUnpublished) {
+        Long numPosts;
+        if(!includeUnpublished)
+            numPosts = blogPostRepo.countBlogPostsByTagName(tagName);
+        else
+            numPosts = blogPostRepo.countBlogPostsByTagNameWithUnpublished(tagName);
+
+        return (long)Math.ceil(numPosts/(double)pageSize);
     }
 
     /**
@@ -208,19 +235,30 @@ public class BlogService {
      * @param pageSize the associated page size for the return value
      * @return the total number of pages depending on the total number of available posts
      */
-    public Long getNumPages(int pageSize) {
-        return (long)Math.ceil(blogPostRepo.count()/(double)pageSize);
+    public Long getNumPages(int pageSize, boolean includeUnpublished) {
+        if(includeUnpublished)
+            return (long)Math.ceil(blogPostRepo.count()/(double)pageSize);
+        else
+            return (long)Math.ceil(blogPostRepo.countBlogPostsByPublished(includeUnpublished)/(double)pageSize);
     }
 
-    public List<IdWrapperDTO> getOffsetPagedBlogIds(int pageNumber, int pageSize, String tagName) {
-        Page<IdWrapper> page = blogPostRepo.findAllIdsByTagNamePageableOrderedByCreation(tagName, PageRequest.of(pageNumber, pageSize));
+    public List<IdWrapperDTO> getOffsetPagedBlogIds(int pageNumber, int pageSize, String tagName, boolean includeUnpublished) {
+        Page<IdWrapper> page;
+        if(includeUnpublished)
+            page = blogPostRepo.findAllIdsByTagNamePageableOrderedByCreationWithUnpublished(tagName, PageRequest.of(pageNumber, pageSize));
+        else
+            page = blogPostRepo.findAllIdsByTagNamePageableOrderedByCreation(tagName, PageRequest.of(pageNumber, pageSize));
 
         // then convert and return
         return page.stream().map(wrapper -> converter.map(wrapper, IdWrapperDTO.class)).collect(Collectors.toList());
     }
 
-    public List<IdWrapperDTO> getOffsetPagedBlogIds(int pageNumber, int pageSize) {
-        Page<IdWrapper> page = blogPostRepo.findAllIdsPageableOrderedByCreation(PageRequest.of(pageNumber, pageSize));
+    public List<IdWrapperDTO> getOffsetPagedBlogIds(int pageNumber, int pageSize, boolean includeUnpublished) {
+        Page<IdWrapper> page;
+        if(includeUnpublished)
+            page = blogPostRepo.findAllIdsPageableOrderedByCreationWithUnpublished(PageRequest.of(pageNumber, pageSize));
+        else
+            page = blogPostRepo.findAllIdsPageableOrderedByCreation(PageRequest.of(pageNumber, pageSize));
 
         // then convert and return
         return page.stream().map(wrapper -> converter.map(wrapper, IdWrapperDTO.class)).collect(Collectors.toList());

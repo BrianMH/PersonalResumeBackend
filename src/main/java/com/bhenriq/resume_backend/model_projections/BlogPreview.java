@@ -15,4 +15,5 @@ public interface BlogPreview {
     String getBlogHeader();
     String getBlogTitle();
     Instant getCreatedOn();
+    Boolean getPublished();
 }
