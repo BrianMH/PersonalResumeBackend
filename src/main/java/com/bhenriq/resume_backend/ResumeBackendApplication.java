@@ -5,6 +5,7 @@ import com.bhenriq.resume_backend.dummy.InitialPost;
 import com.bhenriq.resume_backend.model.*;
 import com.bhenriq.resume_backend.repository.*;
 import com.bhenriq.resume_backend.service.S3BucketService;
+import com.bhenriq.resume_backend.util.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
@@ -13,6 +14,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.*;
 
+/**
+ * The entry point of the application.
+ *
+ * TODO: Move initializations outside of this section to their own appropriate utility initializer based on sections.
+ */
 @SpringBootApplication
 public class ResumeBackendApplication implements CommandLineRunner {
     @Autowired
@@ -26,7 +32,13 @@ public class ResumeBackendApplication implements CommandLineRunner {
     @Autowired
     private BlogPostRepository blogPostRepo;
     @Autowired
-    BlogPostTagRepository blogPostTagRepo;
+    private BlogPostTagRepository blogPostTagRepo;
+    @Autowired
+    private ResumeSkillRepository resSkillRepo;
+    @Autowired
+    private ResumeEducationRepository resEduRepo;
+    @Autowired
+    private ResumeExperienceRepository resExpRepo;
 
     @Value("${BACKEND_API_KEY}")
     private String DEFAULT_API_KEY;
@@ -93,12 +105,47 @@ public class ResumeBackendApplication implements CommandLineRunner {
         blogPostRepo.save(firstPost);
     }
 
+    private void setupResumeSkills() {
+        List<Pair<String, Integer>> technicalSkills = List.of(
+                new Pair<>("Python", 90),
+                new Pair<>("Java", 85),
+                new Pair<>("Deep Learning", 85),
+                new Pair<>("Data Analysis", 80),
+                new Pair<>("Typescript", 80),
+                new Pair<>("Next.js", 70),
+                new Pair<>("Spring Framework", 80),
+                new Pair<>("REST API", 80),
+                new Pair<>("HTML/CSS", 80),
+                new Pair<>("AWS", 80));
+        technicalSkills.forEach(skillMap -> { resSkillRepo.save(new ResumeSkill(null, skillMap.left, skillMap.right, "Technical")); });
+
+        List<Pair<String, Integer>> softSkills = List.of(
+                new Pair<>("Project Management", 95),
+                new Pair<>("Documentation", 85),
+                new Pair<>("Communication", 95),
+                new Pair<>("Leadership", 85),
+                new Pair<>("Adaptability", 90)
+        );
+        softSkills.forEach(skillMap -> { resSkillRepo.save(new ResumeSkill(null, skillMap.left, skillMap.right, "Soft")); });
+    }
+
+    private void setupResumeExperience() {
+
+    }
+
+    private void setupResumeEducation() {
+
+    }
+
     @Override
     public void run(String... args) {
 //        setupRoles();
 //        setupAPIUser();
 //        setupBaseAdminUserPrivileges();
 //        setupInitialBlogPost();
+        setupResumeSkills();
+        setupResumeExperience();
+        setupResumeEducation();
     }
 
 

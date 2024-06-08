@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -77,6 +78,23 @@ public class SecurityTokenConfig {
 
                         // and lock any other request behind the necessary admin privileges
                         .anyRequest().hasAnyAuthority("BLOG_ADMIN", "GENERAL_ADMIN")
+                )
+                .build();
+    }
+
+    /**
+     * Unlike with other values, the resume page itself doesn't contain information that needs to be hidden from the user
+     * for any GET operations. So, it can be allowed for any GET method under any authorization/authentication state.
+     */
+    @Bean
+    @Order(2)
+    public SecurityFilterChain resumeFilterChain(HttpSecurity http) throws Exception {
+        return tokenSecurityBaseConfig(http, "/api/resume/**")
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.GET, "/api/resume/**").permitAll()
+
+                        // lock any other requests than GET behind the proper authorizations
+                        .requestMatchers("/api/resume/**").hasAnyAuthority("RESUME_ADMIN", "GENERAL_ADMIN")
                 )
                 .build();
     }
