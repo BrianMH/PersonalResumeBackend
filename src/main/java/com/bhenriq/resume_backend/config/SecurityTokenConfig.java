@@ -71,7 +71,8 @@ public class SecurityTokenConfig {
                 .authorizeHttpRequests(auth -> auth
                         // first allow users to access specific paths which anyone can access
                         .requestMatchers("/api/blog/posts").permitAll()
-                        .requestMatchers("/api/blog/posts/{id}").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/blog/posts/validateUrls").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/blog/posts/{id}").permitAll()
                         .requestMatchers("/api/blog/posts/{id}/preview").permitAll()
                         .requestMatchers("/api/blog/tags/all").permitAll()
                         .requestMatchers("/api/blog/posts/paged/**").permitAll()
@@ -91,7 +92,7 @@ public class SecurityTokenConfig {
     public SecurityFilterChain resumeFilterChain(HttpSecurity http) throws Exception {
         return tokenSecurityBaseConfig(http, "/api/resume/**")
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/api/resume/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/resume/skills/**").permitAll()
 
                         // lock any other requests than GET behind the proper authorizations
                         .requestMatchers("/api/resume/**").hasAnyAuthority("RESUME_ADMIN", "GENERAL_ADMIN")

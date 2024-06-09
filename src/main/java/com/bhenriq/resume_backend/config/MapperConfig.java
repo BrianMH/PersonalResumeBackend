@@ -1,4 +1,4 @@
-package com.bhenriq.resume_backend.service;
+package com.bhenriq.resume_backend.config;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
  * Provides some of the base objects that will be necessary throughout the service layer
  */
 @Configuration
-public class GenericServiceConfig {
+public class MapperConfig {
     /**
      * Returns a model mapper with the default configuration set
      * @return a model mapper object

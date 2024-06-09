@@ -12,6 +12,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import java.time.LocalDate;
 import java.util.*;
 
 /**
@@ -29,16 +30,20 @@ public class ResumeBackendApplication implements CommandLineRunner {
     private AccountRepository accountRepo;
     @Autowired
     private EmailWhitelistRepository emailListRepo;
+
     @Autowired
     private BlogPostRepository blogPostRepo;
     @Autowired
     private BlogPostTagRepository blogPostTagRepo;
+
     @Autowired
     private ResumeSkillRepository resSkillRepo;
     @Autowired
     private ResumeEducationRepository resEduRepo;
     @Autowired
     private ResumeExperienceRepository resExpRepo;
+    @Autowired
+    private ReferenceRepository refRepo;
 
     @Value("${BACKEND_API_KEY}")
     private String DEFAULT_API_KEY;
@@ -116,7 +121,8 @@ public class ResumeBackendApplication implements CommandLineRunner {
                 new Pair<>("Spring Framework", 80),
                 new Pair<>("REST API", 80),
                 new Pair<>("HTML/CSS", 80),
-                new Pair<>("AWS", 80));
+                new Pair<>("AWS", 80)
+        );
         technicalSkills.forEach(skillMap -> { resSkillRepo.save(new ResumeSkill(null, skillMap.left, skillMap.right, "Technical")); });
 
         List<Pair<String, Integer>> softSkills = List.of(
@@ -130,11 +136,81 @@ public class ResumeBackendApplication implements CommandLineRunner {
     }
 
     private void setupResumeExperience() {
+        List<String> researchBullets = List.of(
+                "Designed control scheme and software GUI interface for snake-like colonoscopy robot prototype using Python and MATLAB",
+                "Tripled robot sensor polling rate by improving on the ARM C-based implementation",
+                "Assisted in data collection of robot performance, wrote journal paper drafts, and presented on an MVP publicly"
+        );
+        List<String> tutorBullets = List.of(
+                "Increased student course enrollment by re-structuring the face recognition project to expand on theoretical underpinnings and modifying it to use up-to-date APIs",
+                "Mentored several student software development teams simultaneously and functioned as a domain expert and scrum leader, ensuring deadlines were met and goals were feasible",
+                "Created student resources & documentation for multiple in-development projects to slowly introduce to the course",
+                "Researched and implemented minimum viable products for prospective course project ideas in a team of four"
+        );
+        List<String> taBullets = List.of(
+                "Engaged in one-on-ones with students during lab sections and office hours sections to further knowledge of common circuit systems and their issues",
+                "Increased student course satisfaction by holding discussion sections that involved difficult-to-solve circuit systems and a more interactive environment"
+        );
 
+        List<Reference> tutorRefs =  refRepo.saveAll(List.of(
+                new Reference(null, "https://pib.ucsd.edu/", Reference.IconTypes.WEB_ICON.toString(), "Course Site"),
+                new Reference(null, "https://sites.google.com/view/ece-196/face-recognition", Reference.IconTypes.BOOK_ICON.toString(), "Project Page"),
+                new Reference(null, "https://github.com/ProjectInABox", Reference.IconTypes.GITHUB_ICON.toString(), "Course Github")
+        ));
+
+        List<ResumeExperience> relevantExps = List.of(
+                new ResumeExperience(
+                        null,
+                        "Research",
+                        "Student Research Intern",
+                        "University of California - San Diego",
+                        LocalDate.of(2018, 8, 1),
+                        LocalDate.of(2018, 9, 1),
+                        researchBullets,
+                        null
+                ),
+                new ResumeExperience(
+                        null,
+                        "Contract",
+                        "Makerspace Tutor",
+                        "University of California - San Diego",
+                        LocalDate.of(2017, 9, 1),
+                        LocalDate.of(2019, 9, 1),
+                        tutorBullets,
+                        tutorRefs
+                ),
+                new ResumeExperience(
+                        null,
+                        "Contract",
+                        "Teaching Assistant",
+                        "University of California - San Diego",
+                        LocalDate.of(2019, 7, 1),
+                        LocalDate.of(2019, 9, 1),
+                        taBullets,
+                        null
+                )
+        );
+
+        resExpRepo.saveAll(relevantExps);
     }
 
     private void setupResumeEducation() {
+        Set<String> psTopics = Set.of("Java", "Spring Framework", "Web Development", "Typescript", "Next.js", "React.js", "REST", "Microservices", "HTML/CSS");
+        Set<String> msTopics = Set.of("Data Analysis", "Deep Learning", "Generative Models", "Computer Vision", "Control Systems", "Python", "Data Mining", "Hadoop", "Spark", "Linear Algebra", "Git", "PCB Design", "Embedded Programming");
+        Set<String> bsTopics = Set.of("ARM C++", "C++", "Rapid Prototyping", "Python", "Machine Learning", "Statistical Learning", "Data Structures", "Algorithms", "Data Analysis", "Java", "Git", "Project Management");
+        List<ResumeEducation> relevantEds = List.of(
+                new ResumeEducation(null, "Per Scholas", "Further Education",
+                        "Full Stack Java Development", null, null,
+                        LocalDate.of(2023, 12, 1), LocalDate.of(2024, 3, 1), psTopics),
+                new ResumeEducation(null, "University of California - San Diego (UCSD)", "MS",
+                        "Electrical Engineering (Machine Learning & Data Science", 3.34, "Machine Learning & Data Science",
+                        LocalDate.of(2018, 9, 1), LocalDate.of(2020, 6, 12), msTopics),
+                new ResumeEducation(null, "University of California - San Diego (UCSD)", "BS",
+                        "Electrical Engineering", 3.73, "Machine Learning",
+                        LocalDate.of(2014, 9, 1), LocalDate.of(2018, 6, 12), bsTopics)
+        );
 
+        resEduRepo.saveAll(relevantEds);
     }
 
     @Override
@@ -143,9 +219,9 @@ public class ResumeBackendApplication implements CommandLineRunner {
 //        setupAPIUser();
 //        setupBaseAdminUserPrivileges();
 //        setupInitialBlogPost();
-        setupResumeSkills();
-        setupResumeExperience();
-        setupResumeEducation();
+//        setupResumeSkills();
+//        setupResumeExperience();
+//        setupResumeEducation();
     }
 
 

@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.MonthDay;
+import java.time.YearMonth;
 import java.util.Set;
 
 /**
@@ -33,7 +36,7 @@ public class ResumeEducation {
             nullable = false)
     private String degreeTitle;
     @Column(name = "gpa")
-    private Float gpa;
+    private Double gpa;
     @Column(name = "focus")
     private String focus;
 
@@ -41,9 +44,9 @@ public class ResumeEducation {
     // Note that ended can be null (which would mean the position is currently taking place)
     @Column(name = "started",
             nullable = false)
-    private Instant started;
+    private LocalDate started;
     @Column(name = "ended")
-    private Instant ended;
+    private LocalDate ended;
 
     // And we keep our relevant topics in a list
     // TODO: This could avoid repetition by having a "topics" table, but the amount of saved space is likely negligible

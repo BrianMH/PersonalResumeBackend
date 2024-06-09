@@ -17,6 +17,10 @@ public class ResumeSkillService {
     private ModelMapper converter;
 
     public List<ResumeSkillDTO> getSkillsWithType(String skillType) {
-        return resumeSkillRepo.findAllByType(skillType).stream().map(curSkill -> converter.map(curSkill, ResumeSkillDTO.class)).toList();
+        return resumeSkillRepo.findAllByTypeIgnoreCase(skillType).stream().map(curSkill -> converter.map(curSkill, ResumeSkillDTO.class)).toList();
+    }
+
+    public List<String> getAllSkillTypes() {
+        return resumeSkillRepo.findAllTypes();
     }
 }
