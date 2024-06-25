@@ -24,6 +24,7 @@ public class Reference {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    // reference urls should not overlap
     private String refUrl;
     private String iconType;
     private String description;

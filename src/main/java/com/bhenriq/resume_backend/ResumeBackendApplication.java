@@ -43,6 +43,8 @@ public class ResumeBackendApplication implements CommandLineRunner {
     @Autowired
     private ResumeExperienceRepository resExpRepo;
     @Autowired
+    private ResumeProjectRepository resProjRepo;
+    @Autowired
     private ReferenceRepository refRepo;
 
     @Value("${BACKEND_API_KEY}")
@@ -213,6 +215,34 @@ public class ResumeBackendApplication implements CommandLineRunner {
         resEduRepo.saveAll(relevantEds);
     }
 
+    // Unlike the other values, there's just too many of this kind to set up. Instead, I will set up one of them and the
+    // rest will be added manually.
+    private void setupResumeProjects() {
+        List<String> projBullets = List.of(
+                "Created a dynamically updatable front-end server with proper resource caching and hosted it on Vercel",
+                "Designed a database for the front-end and implemented it using PostgreSQL along with an interface in Java using Spring Framework",
+                "Hosted the back-end on AWS RDS + AWS EC2 and created a static resource bucket on S3 with caching on the edge",
+                "Implemented an Auth.js-based middleware layer to secure front-end and complemented it with a Spring JWT role-based authentication scheme on the back-end",
+                "Mapped proper DNS entries on Namespace and created proper SSL certification to prevent data leakage and CORS errors between the front-end and back-end."
+        );
+        String name = "AWS/Vercel Hosted Resume Website";
+        String description = "A resume-based site using a Next.js front-end server on Vercel and a Spring back-end server on AWS.";
+
+        ResumeProject toAdd = new ResumeProject(
+                null,
+                name,
+                description,
+                "Full Stack Developer",
+                "Personal Project",
+                LocalDate.of(2024, 3, 1),
+                null,
+                projBullets,
+                null
+        );
+
+        resProjRepo.save(toAdd);
+    }
+
     @Override
     public void run(String... args) {
 //        setupRoles();
@@ -222,6 +252,7 @@ public class ResumeBackendApplication implements CommandLineRunner {
 //        setupResumeSkills();
 //        setupResumeExperience();
 //        setupResumeEducation();
+        setupResumeProjects();
     }
 
 

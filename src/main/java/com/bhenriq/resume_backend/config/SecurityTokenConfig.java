@@ -92,7 +92,7 @@ public class SecurityTokenConfig {
     public SecurityFilterChain resumeFilterChain(HttpSecurity http) throws Exception {
         return tokenSecurityBaseConfig(http, "/api/resume/**")
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/api/resume/skills/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/resume/**").permitAll()
 
                         // lock any other requests than GET behind the proper authorizations
                         .requestMatchers("/api/resume/**").hasAnyAuthority("RESUME_ADMIN", "GENERAL_ADMIN")

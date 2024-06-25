@@ -36,12 +36,12 @@ public class ResumeEducationDTO {
     @JsonProperty("degreeStart")
     @JsonSerialize(using = LocalDateSerializer.class)
     @JsonDeserialize(using = LocalDateDeserializer.class)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
+    @JsonFormat(pattern="yyyy-MM-dd")
     private LocalDate started;
     @JsonProperty("degreeEnd")
     @JsonSerialize(using = LocalDateSerializer.class)
     @JsonDeserialize(using = LocalDateDeserializer.class)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
+    @JsonFormat(pattern="yyyy-MM-dd")
     private LocalDate ended;
 
     // empty ctor that pre-defines our description object and leaves everything else as null
