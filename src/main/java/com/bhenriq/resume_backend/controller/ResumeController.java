@@ -115,6 +115,13 @@ public class ResumeController {
         return ResponseEntity.status(HttpStatus.SC_OK).body(updatedProject);
     }
 
+    @DeleteMapping("/project/{id}")
+    public ResponseEntity<StatusDTO> deleteProjectById(@PathVariable("id") String id) {
+        resumeProjectService.deleteProject(id);
+
+        return ResponseEntity.status(HttpStatus.SC_OK).body(new StatusDTO(true, HttpStatus.SC_OK, "Deleted."));
+    }
+
     @GetMapping("/project/index")
     public ResponseEntity<List<String>> getAllProjectIds() {
         List<String> relIds = resumeProjectService.getAllIds();

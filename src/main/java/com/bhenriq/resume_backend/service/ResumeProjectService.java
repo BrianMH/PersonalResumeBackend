@@ -7,6 +7,7 @@ import com.bhenriq.resume_backend.model.Reference;
 import com.bhenriq.resume_backend.model.ResumeProject;
 import com.bhenriq.resume_backend.repository.ReferenceRepository;
 import com.bhenriq.resume_backend.repository.ResumeProjectRepository;
+import org.hibernate.annotations.NotFound;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -49,6 +50,18 @@ public class ResumeProjectService {
 
         // and then return the DTO
         return converter.map(savedValue, ResumeProjectDTO.class);
+    }
+
+    public void deleteProject(String id) {
+        Optional<ResumeProject> toDeleteCnt = resumeProjectRepo.findById(id);
+        ResumeProject toDelete = toDeleteCnt.orElseThrow(() -> new NotFoundException("Project with id " + id + " does not exist."));
+
+        // disconnect entries with references before deletion
+        List<Reference> staleRefs = toDelete.getReferences();
+        toDelete.setReferences(null);
+        resumeProjectRepo.saveAndFlush(toDelete);
+        referenceRepo.deleteAll(staleRefs);
+        resumeProjectRepo.delete(toDelete);
     }
 
     public ResumeProjectDTO updateProject(ResumeProjectDTO toUpdate) {

@@ -252,7 +252,7 @@ public class ResumeBackendApplication implements CommandLineRunner {
 //        setupResumeSkills();
 //        setupResumeExperience();
 //        setupResumeEducation();
-        setupResumeProjects();
+//        setupResumeProjects();
     }
 
 
